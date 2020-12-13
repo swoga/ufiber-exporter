@@ -1,0 +1,7 @@
+# ignore folders starting with .
+.*/
+!/.licenses/
+!/.github/
+
+# ignore binary in root folder
+/ufiber-exporter
