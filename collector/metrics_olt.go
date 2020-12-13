@@ -1,0 +1,196 @@
+package collector
+
+import (
+	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/swoga/ufiber-exporter/model"
+)
+
+func AddMetricsOlt(registry prometheus.Registerer, statistics model.Statistics, interfacesInterfaces []model.InterfacesInterface) {
+	registry = prometheus.WrapRegistererWithPrefix("olt_", registry)
+
+	addMetricsOltDevice(registry, statistics.Device)
+	addMetricsOltInterfaces(registry, statistics.Interfaces, interfacesInterfaces)
+}
+
+func addMetricsOltDevice(registry prometheus.Registerer, device model.Device) {
+	// CPU
+	cpuGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "cpu_usage",
+	}, []string{"cpu"})
+	registry.MustRegister(cpuGaugeVec)
+
+	for _, cpu := range device.CPU {
+		if cpu.Identifier == "cpu" {
+			continue
+		}
+		cpuGaugeVec.WithLabelValues(cpu.Identifier).Set(float64(cpu.Usage))
+	}
+
+	// FANs
+	fanSpeedGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "fan_speed",
+	}, []string{"fan"})
+	registry.MustRegister(fanSpeedGaugeVec)
+
+	for i, fanSpeed := range device.FanSpeeds {
+		fanSpeedGaugeVec.WithLabelValues(strconv.Itoa(i)).Set(fanSpeed.Value)
+	}
+
+	// PSUs
+	psuConnectedGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "psu_connected",
+	}, []string{"psu"})
+	registry.MustRegister(psuConnectedGaugeVec)
+	psuVoltageGauge := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "psu_voltage",
+	})
+	registry.MustRegister(psuVoltageGauge)
+	psuPowerGauge := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "psu_power",
+	})
+	registry.MustRegister(psuPowerGauge)
+
+	for i, psu := range device.Power {
+		var connected float64
+		if psu.Connected {
+			connected = 1
+		}
+		psuConnectedGaugeVec.WithLabelValues(strconv.Itoa(i)).Set(connected)
+
+		// voltage and power is only reported by one PSU
+		if psu.Voltage != nil {
+			psuVoltageGauge.Set(*psu.Voltage)
+		}
+		if psu.Power != nil {
+			psuPowerGauge.Set(*psu.Power)
+		}
+	}
+
+	// RAM
+	ramTotalGauge := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ram_total",
+	})
+	registry.MustRegister(ramTotalGauge)
+	ramFreeGauge := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ram_free",
+	})
+	registry.MustRegister(ramFreeGauge)
+
+	ramTotalGauge.Set(device.RAM.Total)
+	ramFreeGauge.Set(device.RAM.Free)
+
+	// Temperatures
+	temperatureGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "temperature",
+	}, []string{"sensor"})
+	registry.MustRegister(temperatureGaugeVec)
+
+	for i, temperature := range device.Temperatures {
+		temperatureGaugeVec.WithLabelValues(strconv.Itoa(i)).Set(temperature.Value)
+	}
+
+	// Uptime
+	uptimeCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "uptime",
+	})
+	registry.MustRegister(uptimeCounter)
+
+	uptimeCounter.Add(device.Uptime)
+}
+
+func addMetricsOltInterfaces(registry prometheus.Registerer, statisticsInterfaces []model.StatisticsInterface, interfacesInterfaces []model.InterfacesInterface) {
+	interfaceRxBytesCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "interface_rx_bytes",
+	}, []string{"name"})
+	registry.MustRegister(interfaceRxBytesCounterVec)
+	interfaceRxPacketsCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "interface_rx_packets",
+	}, []string{"name"})
+	registry.MustRegister(interfaceRxPacketsCounterVec)
+	interfaceTxBytesCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "interface_tx_bytes",
+	}, []string{"name"})
+	registry.MustRegister(interfaceTxBytesCounterVec)
+	interfaceTxPacketsCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "interface_tx_packets",
+	}, []string{"name"})
+	registry.MustRegister(interfaceTxPacketsCounterVec)
+
+	interfaceSfpRxPowerGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "interface_sfp_rx_power",
+	}, []string{"name"})
+	registry.MustRegister(interfaceSfpRxPowerGaugeVec)
+	interfaceSfpTemperatureGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "interface_sfp_temperature",
+	}, []string{"name"})
+	registry.MustRegister(interfaceSfpTemperatureGaugeVec)
+
+	for _, interf := range statisticsInterfaces {
+		if interf.Statistics.RxBytes != nil {
+			interfaceRxBytesCounterVec.WithLabelValues(interf.ID).Add(*interf.Statistics.RxBytes)
+		}
+		if interf.Statistics.RxPackets != nil {
+			interfaceRxPacketsCounterVec.WithLabelValues(interf.ID).Add(*interf.Statistics.RxPackets)
+		}
+		if interf.Statistics.TxBytes != nil {
+			interfaceTxBytesCounterVec.WithLabelValues(interf.ID).Add(*interf.Statistics.TxBytes)
+		}
+		if interf.Statistics.TxPackets != nil {
+			interfaceTxPacketsCounterVec.WithLabelValues(interf.ID).Add(*interf.Statistics.TxPackets)
+		}
+
+		if interf.Statistics.SFP != nil {
+			if interf.Statistics.SFP.RxPower != nil {
+				interfaceSfpRxPowerGaugeVec.WithLabelValues(interf.ID).Set(*interf.Statistics.SFP.RxPower)
+			}
+			if interf.Statistics.SFP.Temperature != nil {
+				interfaceSfpTemperatureGaugeVec.WithLabelValues(interf.ID).Set(*interf.Statistics.SFP.Temperature)
+			}
+		}
+	}
+
+	interfaceStatusEnabledGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "interface_enabled",
+	}, []string{"name"})
+	registry.MustRegister(interfaceStatusEnabledGaugeVec)
+	interfaceStatusPluggedGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "interface_plugged",
+	}, []string{"name"})
+	registry.MustRegister(interfaceStatusPluggedGaugeVec)
+	interfaceSfpPresentGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "interface_sfp_present",
+	}, []string{"name"})
+	registry.MustRegister(interfaceSfpPresentGaugeVec)
+
+	for _, interf := range interfacesInterfaces {
+		var enabled float64 = 0
+		if interf.Status.Enabled {
+			enabled = 1
+		}
+		interfaceStatusEnabledGaugeVec.WithLabelValues(interf.Identification.ID).Set(enabled)
+
+		var plugged float64 = 0
+		if interf.Status.Plugged {
+			plugged = 1
+		}
+		interfaceStatusPluggedGaugeVec.WithLabelValues(interf.Identification.ID).Set(plugged)
+
+		if interf.Port != nil {
+			var present float64 = 0
+			if interf.Port.SFP.Present {
+				present = 1
+			}
+			interfaceSfpPresentGaugeVec.WithLabelValues(interf.Identification.ID).Set(present)
+		}
+
+		if interf.PON != nil {
+			var present float64 = 0
+			if interf.PON.SFP.Present {
+				present = 1
+			}
+			interfaceSfpPresentGaugeVec.WithLabelValues(interf.Identification.ID).Set(present)
+		}
+	}
+}
