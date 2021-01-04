@@ -1,0 +1,21 @@
+go:
+  version: 1.15.6
+repository:
+  path: github.com/swoga/ufiber-exporter
+build:
+  binaries:
+    - name: ufiber-exporter
+      path: ./cmd/ufiber-exporter
+  flags: -tags netgo -trimpath
+  ldflags: |
+    -w -s
+    -X github.com/swoga/ufiber-exporter/version.Version={{.Version}}
+    -X github.com/swoga/ufiber-exporter/version.Revision={{.Revision}}
+tarball:
+  files:
+    - LICENSE
+    - NOTICE
+    - example.yml
+crossbuild:
+  platforms:
+    - linux/amd64
