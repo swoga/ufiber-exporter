@@ -7,14 +7,19 @@ import (
 	"github.com/swoga/ufiber-exporter/model"
 )
 
-func AddMetricsOlt(registry prometheus.Registerer, statistics model.Statistics, interfacesInterfaces []model.InterfacesInterface) {
-	registry = prometheus.WrapRegistererWithPrefix("olt_", registry)
-
-	addMetricsOltDevice(registry, statistics.Device)
-	addMetricsOltInterfaces(registry, statistics.Interfaces, interfacesInterfaces)
+func AddMetricsOlt(registry prometheus.Registerer, statistics model.Statistics, interfacesInterfaces []model.InterfacesInterface) error {
+	err := addMetricsOltDevice(registry, statistics.Device)
+	if err != nil {
+		return err
+	}
+	err = addMetricsOltInterfaces(prometheus.WrapRegistererWithPrefix("interface_", registry), statistics.Interfaces, interfacesInterfaces)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func addMetricsOltDevice(registry prometheus.Registerer, device model.Device) {
+func addMetricsOltDevice(registry prometheus.Registerer, device model.Device) error {
 	// CPU
 	cpuGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cpu_usage",
@@ -98,34 +103,40 @@ func addMetricsOltDevice(registry prometheus.Registerer, device model.Device) {
 	registry.MustRegister(uptimeCounter)
 
 	uptimeCounter.Add(device.Uptime)
+	return nil
 }
 
-func addMetricsOltInterfaces(registry prometheus.Registerer, statisticsInterfaces []model.StatisticsInterface, interfacesInterfaces []model.InterfacesInterface) {
+func addMetricsOltInterfaces(registry prometheus.Registerer, statisticsInterfaces []model.StatisticsInterface, interfacesInterfaces []model.InterfacesInterface) error {
 	interfaceRxBytesCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "interface_rx_bytes",
+		Name: "rx_bytes",
 	}, []string{"name"})
 	registry.MustRegister(interfaceRxBytesCounterVec)
 	interfaceRxPacketsCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "interface_rx_packets",
+		Name: "rx_packets",
 	}, []string{"name"})
 	registry.MustRegister(interfaceRxPacketsCounterVec)
 	interfaceTxBytesCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "interface_tx_bytes",
+		Name: "tx_bytes",
 	}, []string{"name"})
 	registry.MustRegister(interfaceTxBytesCounterVec)
 	interfaceTxPacketsCounterVec := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "interface_tx_packets",
+		Name: "tx_packets",
 	}, []string{"name"})
 	registry.MustRegister(interfaceTxPacketsCounterVec)
 
-	interfaceSfpRxPowerGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "interface_sfp_rx_power",
+	interfaceRxPowerGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "rx_power",
 	}, []string{"name"})
-	registry.MustRegister(interfaceSfpRxPowerGaugeVec)
+	registry.MustRegister(interfaceRxPowerGaugeVec)
 	interfaceSfpTemperatureGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "interface_sfp_temperature",
+		Name: "sfp_temperature",
 	}, []string{"name"})
 	registry.MustRegister(interfaceSfpTemperatureGaugeVec)
+
+	interfaceNameGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "name",
+	}, []string{"name", "given_name"})
+	registry.MustRegister(interfaceNameGaugeVec)
 
 	for _, interf := range statisticsInterfaces {
 		if interf.Statistics.RxBytes != nil {
@@ -143,24 +154,30 @@ func addMetricsOltInterfaces(registry prometheus.Registerer, statisticsInterface
 
 		if interf.Statistics.SFP != nil {
 			if interf.Statistics.SFP.RxPower != nil {
-				interfaceSfpRxPowerGaugeVec.WithLabelValues(interf.ID).Set(*interf.Statistics.SFP.RxPower)
+				interfaceRxPowerGaugeVec.WithLabelValues(interf.ID).Set(*interf.Statistics.SFP.RxPower)
 			}
 			if interf.Statistics.SFP.Temperature != nil {
 				interfaceSfpTemperatureGaugeVec.WithLabelValues(interf.ID).Set(*interf.Statistics.SFP.Temperature)
 			}
 		}
+
+		name := interf.Name
+		if name == "" {
+			name = interf.ID
+		}
+		interfaceNameGaugeVec.WithLabelValues(interf.ID, name).Set(1)
 	}
 
 	interfaceStatusEnabledGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "interface_enabled",
+		Name: "enabled",
 	}, []string{"name"})
 	registry.MustRegister(interfaceStatusEnabledGaugeVec)
 	interfaceStatusPluggedGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "interface_plugged",
+		Name: "plugged",
 	}, []string{"name"})
 	registry.MustRegister(interfaceStatusPluggedGaugeVec)
 	interfaceSfpPresentGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "interface_sfp_present",
+		Name: "sfp_present",
 	}, []string{"name"})
 	registry.MustRegister(interfaceSfpPresentGaugeVec)
 
@@ -193,4 +210,5 @@ func addMetricsOltInterfaces(registry prometheus.Registerer, statisticsInterface
 			interfaceSfpPresentGaugeVec.WithLabelValues(interf.Identification.ID).Set(present)
 		}
 	}
+	return nil
 }
