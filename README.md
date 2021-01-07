@@ -2,14 +2,25 @@
 `ufiber-exporter` is an Prometheus exporter for Ubiquiti UFiber OLTs.  
 The goal is to export all available metrics from the OLT and attached ONUs.
 
+## Probing
+Devices can be probed (when using the defaults) by requesting http://localhost:9777/probe?target=NAME.  
+Configured [options](#options) can be overwritten by using query parameters (e.g. [http://localhost:9777/probe?target=NAME&**export_olt=1&export_onus=0**](http://localhost:9777/probe?target=NAME&export_olt=1&export_onus=0)).
+
+## Docker image
+
+Docker image is available on Docker Hub, Quay.io and GitHub
+
+`docker pull swoga/ufiber-exporter`  
+`docker pull quay.io/swoga/ufiber-exporter`  
+`docker pull ghcr.io/swoga/ufiber-exporter`
+
+You just need to map your config file into the container at `/etc/ufiber-exporter/config.yml`  
+`docker run -v config.yml:/etc/ufiber-exporter/config.yml swoga/ufiber-exporter`
+
 ## Command line flags
 `ufiber-exporter` requires a path to a YAML config file supplied in the command line flag `--config.file=config.yml`.
 
 `--debug` can be used to raise the log level.
-
-## Probing
-Devices can be probed (when using the defaults) by requesting http://localhost:9777/probe?target=NAME.  
-Configured [options](#options) can be overwritten by using query parameters (e.g. [http://localhost:9777/probe?target=NAME&**export_olt=1&export_onus=0**](http://localhost:9777/probe?target=NAME&export_olt=1&export_onus=0)).
 
 ## Configuration file
 ```yaml
