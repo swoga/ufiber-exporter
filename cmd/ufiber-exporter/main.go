@@ -124,6 +124,21 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	deviceOptions := *device.Options
+
+	paramExportOLT := r.URL.Query().Get("export_olt")
+	if paramExportOLT != "" {
+		deviceOptions.ExportOLT = paramExportOLT == "1"
+	}
+	paramExportONUs := r.URL.Query().Get("export_onus")
+	if paramExportONUs != "" {
+		deviceOptions.ExportONUs = paramExportONUs == "1"
+	}
+	paramExportMACTable := r.URL.Query().Get("export_mac_table")
+	if paramExportMACTable != "" {
+		deviceOptions.ExportMACTable = paramExportMACTable == "1"
+	}
+
 	timeout := getTimeout(config, r)
 
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(timeout*float64(time.Second)))
@@ -132,12 +147,19 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 	registry := prometheus.NewRegistry()
-	exporterRegistry := prometheus.WrapRegistererWithPrefix("ufiber_exporter_", registry)
 
-	err := probeDevice(ctx, log, target, device, exporterRegistry)
 	var success float64 = 1
+
+	data, err := getFromAPIWithRetry(ctx, log, target, *device, deviceOptions)
 	if err != nil {
-		log.Error("error probing device", zap.Any("err", err))
+		log.Error("error getting data from API", zap.Any("err", err))
+		success = 0
+	}
+
+	exporterRegistry := prometheus.WrapRegistererWithPrefix("ufiber_exporter_", registry)
+	err = addMetrics(data, deviceOptions, exporterRegistry)
+	if err != nil {
+		log.Error("error adding metrics", zap.Any("err", err))
 		success = 0
 	}
 
@@ -171,50 +193,105 @@ func getTimeout(config *config.Config, r *http.Request) float64 {
 	return config.Timeout
 }
 
-func probeDevice(ctx context.Context, log *zap.Logger, target string, device config.Device, registry prometheus.Registerer) error {
-	statistics, interfaces, err := getFromAPI(ctx, log, target, device)
-	if err != nil {
-		// if there was an error somewhere, retry once
+type apiData struct {
+	statistics   *model.Statistics
+	interfaces   *[]model.InterfacesInterface
+	onus         *[]model.ONU
+	onusSettings *[]model.ONUSettings
+	macTable     *[]model.MACTable
+}
 
-		// remove auth token, so login will be repeated
-		authCache.Remove(target)
-		statistics, interfaces, err = getFromAPI(ctx, log, target, device)
+func addMetrics(data apiData, deviceOptions config.Options, registry prometheus.Registerer) error {
+	if deviceOptions.ExportOLT {
+		err := collector.AddMetricsOlt(prometheus.WrapRegistererWithPrefix("olt_", registry), *data.statistics, *data.interfaces)
 		if err != nil {
-			return fmt.Errorf("error after retry: %s", err)
+			return err
 		}
 	}
-
-	collector.AddMetricsOlt(registry, *statistics, *interfaces)
-	collector.AddMetricsOnu(registry)
+	if deviceOptions.ExportONUs {
+		err := collector.AddMetricsOnu(prometheus.WrapRegistererWithPrefix("onu_", registry), *data.onus, *data.onusSettings)
+		if err != nil {
+			return err
+		}
+	}
+	if deviceOptions.ExportMACTable {
+		err := collector.AddMetricsOnuMACTable(prometheus.WrapRegistererWithPrefix("onu_", registry), *data.macTable)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
 
-func getFromAPI(ctx context.Context, log *zap.Logger, target string, device config.Device) (*model.Statistics, *[]model.InterfacesInterface, error) {
+func getFromAPIWithRetry(ctx context.Context, log *zap.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
+	data, err := getFromAPI(ctx, log, target, device, deviceOptions)
+	if err != nil {
+		// if there was an error somewhere, retry once
+		log.Error("error on first try", zap.Any("err", err))
+
+		// remove auth token, so login will be repeated
+		authCache.Remove(target)
+		data, err = getFromAPI(ctx, log, target, device, deviceOptions)
+		if err != nil {
+			return data, fmt.Errorf("error after retry: %s", err)
+		}
+	}
+
+	return data, nil
+}
+
+func getFromAPI(ctx context.Context, log *zap.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
+	data := apiData{}
 	auth := authCache.Get(target)
 	// if there is no X-Auth-Token in the cache try to login
 	if auth == "" {
 		res, err := api.DoLogin(ctx, log, device)
 
 		if err != nil {
-			return nil, nil, err
+			return data, err
 		}
 
 		auth = res.Header.Get("X-Auth-Token")
 		if auth == "" {
-			return nil, nil, errors.New("no X-Auth-Token after login")
+			return data, errors.New("no X-Auth-Token after login")
 		}
 		authCache.Set(target, auth)
 	}
 
-	statistics, err := api.GetStatistics(ctx, log, device, auth)
-	if err != nil {
-		return nil, nil, err
+	if deviceOptions.ExportOLT {
+		statistics, err := api.GetStatistics(ctx, log, device, auth)
+		if err != nil {
+			return data, err
+		}
+		data.statistics = statistics
+
+		interfaces, err := api.GetInterfaces(ctx, log, device, auth)
+		if err != nil {
+			return data, err
+		}
+		data.interfaces = interfaces
 	}
-	interfaces, err := api.GetInterfaces(ctx, log, device, auth)
-	if err != nil {
-		return nil, nil, err
+	if deviceOptions.ExportONUs {
+		onus, err := api.GetONUs(ctx, log, device, auth)
+		if err != nil {
+			return data, err
+		}
+		data.onus = onus
+
+		onusSettings, err := api.GetONUsSettings(ctx, log, device, auth)
+		if err != nil {
+			return data, err
+		}
+		data.onusSettings = onusSettings
+	}
+	if deviceOptions.ExportMACTable {
+		macTable, err := api.GetMACTable(ctx, log, device, auth)
+		if err != nil {
+			return data, err
+		}
+		data.macTable = macTable
 	}
 
-	return statistics, interfaces, nil
+	return data, nil
 }
