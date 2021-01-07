@@ -69,8 +69,8 @@ func request(ctx context.Context, log *zap.Logger, device config.Device, auth st
 
 func DoLogin(ctx context.Context, log *zap.Logger, device config.Device) (res *http.Response, err error) {
 	login := &model.LoginRequest{
-		Username: device.Username,
-		Password: device.Password,
+		Username: *device.Username,
+		Password: *device.Password,
 	}
 
 	res, err = request(ctx, log, device, "", "POST", "user/login", login)
@@ -125,6 +125,69 @@ func GetInterfaces(ctx context.Context, log *zap.Logger, device config.Device, a
 	}
 
 	var data []model.InterfacesInterface
+
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug("response", zap.Any("data", data))
+
+	defer res.Body.Close()
+
+	return &data, nil
+}
+
+func GetONUs(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.ONU, error) {
+	res, err := request(ctx, log, device, auth, "GET", "gpon/onus", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []model.ONU
+
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug("response", zap.Any("data", data))
+
+	defer res.Body.Close()
+
+	return &data, nil
+}
+
+func GetONUsSettings(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.ONUSettings, error) {
+	res, err := request(ctx, log, device, auth, "GET", "gpon/onus/settings", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []model.ONUSettings
+
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug("response", zap.Any("data", data))
+
+	defer res.Body.Close()
+
+	return &data, nil
+}
+
+func GetMACTable(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.MACTable, error) {
+	res, err := request(ctx, log, device, auth, "GET", "tools/mac-table", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []model.MACTable
 
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&data)
