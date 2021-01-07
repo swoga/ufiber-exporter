@@ -10,7 +10,7 @@ type Config struct {
 
 func DefaultConfig() Config {
 	return Config{
-		Listen:      ":9100",
+		Listen:      ":9777",
 		ProbePath:   "/probe",
 		MetricsPath: "/metrics",
 		Timeout:     60,

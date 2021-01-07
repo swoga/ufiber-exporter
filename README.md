@@ -12,7 +12,7 @@ This tool is work in progress! Metrics for ONUs are missing.
 
 ## Configuration file
 ```yaml
-listen: <string> | default = :9100
+listen: <string> | default = :9777
 probe_path: <string> | default = /probe
 metrics_path: <string> | default = /metrics
 timeout: <int> | default = 60
