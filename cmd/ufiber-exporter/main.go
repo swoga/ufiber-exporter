@@ -154,22 +154,22 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("error getting data from API", zap.Any("err", err))
 		success = 0
-	}
+	} else {
+		exporterRegistry := prometheus.WrapRegistererWithPrefix("ufiber_exporter_", registry)
+		err = addMetrics(data, deviceOptions, exporterRegistry)
+		if err != nil {
+			log.Error("error adding metrics", zap.Any("err", err))
+			success = 0
+		}
 
-	exporterRegistry := prometheus.WrapRegistererWithPrefix("ufiber_exporter_", registry)
-	err = addMetrics(data, deviceOptions, exporterRegistry)
-	if err != nil {
-		log.Error("error adding metrics", zap.Any("err", err))
-		success = 0
+		probeDurationGauge := prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "probe_duration_seconds",
+			Help: "Returns how long the probe took to complete in seconds",
+		})
+		registry.MustRegister(probeDurationGauge)
+		duration := time.Since(start).Seconds()
+		probeDurationGauge.Set(duration)
 	}
-
-	probeDurationGauge := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "probe_duration_seconds",
-		Help: "Returns how long the probe took to complete in seconds",
-	})
-	registry.MustRegister(probeDurationGauge)
-	duration := time.Since(start).Seconds()
-	probeDurationGauge.Set(duration)
 
 	probeSuccessGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "probe_success",
