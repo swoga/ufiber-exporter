@@ -2,13 +2,14 @@
 `ufiber-exporter` is an Prometheus exporter for Ubiquiti UFiber OLTs.  
 The goal is to export all available metrics from the OLT and attached ONUs.
 
-## WIP
-This tool is work in progress! Metrics for ONUs are missing.
-
 ## Command line flags
 `ufiber-exporter` requires a path to a YAML config file supplied in the command line flag `--config.file=config.yml`.
 
 `--debug` can be used to raise the log level.
+
+## Probing
+Devices can be probed (when using the defaults) by requesting http://localhost:9777/probe?target=NAME.  
+Configured [options](#options) can be overwritten by using query parameters (e.g. [http://localhost:9777/probe?target=NAME&**export_olt=1&export_onus=0**](http://localhost:9777/probe?target=NAME&export_olt=1&export_onus=0)).
 
 ## Configuration file
 ```yaml
@@ -16,17 +17,33 @@ listen: <string> | default = :9777
 probe_path: <string> | default = /probe
 metrics_path: <string> | default = /metrics
 timeout: <int> | default = 60
+global: <global>
 
 devices:
   # map key is the name of the target (?target=<string>)
   <string>: <device>
 ```
 
+### `<global>`
+```yaml
+username: <string>
+password: <string>
+options: <options>
+```
+
+### `<options>`
+```yaml
+export_olt: <bool> | default = true
+export_onus: <bool> | default = true
+export_mac_table: <bool> | default = false
+```
+
 ### `<device>`
 ```yaml
 address: <string>
-username: <string>
-password: <string>
+username: <string> | default = global.username
+password: <string> | default = global.password
+options: <options> | default = global.options
 ```
 
 ## Building
