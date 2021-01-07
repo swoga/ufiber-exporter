@@ -152,6 +152,9 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	data, err := getFromAPIWithRetry(ctx, log, target, *device, deviceOptions)
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return
+		}
 		log.Error("error getting data from API", zap.Any("err", err))
 		success = 0
 	} else {
@@ -227,6 +230,9 @@ func addMetrics(data apiData, deviceOptions config.Options, registry prometheus.
 func getFromAPIWithRetry(ctx context.Context, log *zap.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
 	data, err := getFromAPI(ctx, log, target, device, deviceOptions)
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return data, err
+		}
 		// if there was an error somewhere, retry once
 		log.Error("error on first try", zap.Any("err", err))
 
@@ -234,7 +240,7 @@ func getFromAPIWithRetry(ctx context.Context, log *zap.Logger, target string, de
 		authCache.Remove(target)
 		data, err = getFromAPI(ctx, log, target, device, deviceOptions)
 		if err != nil {
-			return data, fmt.Errorf("error after retry: %s", err)
+			return data, fmt.Errorf("error after retry: %w", err)
 		}
 	}
 
