@@ -11,7 +11,7 @@ COPY example.yml /etc/ufiber-exporter/config.yml
 RUN chown -R nobody:nobody /etc/ufiber-exporter
 
 USER nobody
-EXPOSE 80
+EXPOSE 9777
 
 ENTRYPOINT ["/bin/ufiber-exporter"]
 CMD ["--config.file=/etc/ufiber-exporter/config.yml"]
