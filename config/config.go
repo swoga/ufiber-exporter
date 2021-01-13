@@ -38,10 +38,10 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	for _, device := range c.Devices {
-		if device.Username != nil {
+		if device.Username == nil {
 			device.Username = &c.Global.Username
 		}
-		if device.Password != nil {
+		if device.Password == nil {
 			device.Password = &c.Global.Password
 		}
 		if device.Options == nil {
