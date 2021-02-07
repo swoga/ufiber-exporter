@@ -6,9 +6,8 @@ GOHOSTOS     ?= $(shell $(GO) env GOHOSTOS)
 GOHOSTARCH   ?= $(shell $(GO) env GOHOSTARCH)
 GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)
 PREFIX       ?= $(shell pwd)
-GO_LICENSE_DETECTOR ?= go-licence-detector
-
 FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
+GO_LICENSE_DETECTOR ?= $(FIRST_GOPATH)/bin/go-licence-detector
 
 PROMU_VERSION ?= 0.7.0
 PROMU         := $(FIRST_GOPATH)/bin/promu-$(PROMU_VERSION)
@@ -107,8 +106,14 @@ test:
 go-mod-list-updates:
 	$(GO) list -u -m -f '{{if and (not .Indirect) .Update}}{{.}}{{end}}' all
 
+.PHONY: go-licence-detector
+go-licence-detector: $(GO_LICENSE_DETECTOR)
+
+$(GO_LICENSE_DETECTOR):
+	GO111MODULE=off go get go.elastic.co/go-licence-detector
+
 .PHONY: license-notice
-license-notice:
+license-notice: go-licence-detector
 	$(GO) list -m -json all | $(GO_LICENSE_DETECTOR) -includeIndirect -overrides .licenses/overrides.json -rules .licenses/rules.json -noticeTemplate .licenses/NOTICE.tmpl -noticeOut NOTICE
 
 .PHONY: prepare-release
