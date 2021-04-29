@@ -9,7 +9,7 @@ PREFIX       ?= $(shell pwd)
 FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 GO_LICENSE_DETECTOR ?= $(FIRST_GOPATH)/bin/go-licence-detector
 
-PROMU_VERSION ?= 0.7.0
+PROMU_VERSION ?= 0.12.0
 PROMU         := $(FIRST_GOPATH)/bin/promu-$(PROMU_VERSION)
 PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
 
