@@ -1,6 +1,6 @@
 module github.com/swoga/ufiber-exporter
 
-go 1.15
+go 1.16
 
 require (
 	github.com/prometheus/client_golang v1.9.0
