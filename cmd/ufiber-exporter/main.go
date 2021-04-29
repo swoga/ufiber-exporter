@@ -107,7 +107,7 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
-	config := sc.Get()
+	conf := sc.Get()
 	target := r.URL.Query().Get("target")
 	if target == "" {
 		log.Error("request with missing target")
@@ -117,11 +117,15 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	log := log.With(zap.String("target", target))
 
-	device, ok := config.Devices[target]
+	device, ok := conf.Devices[target]
 	if !ok {
-		log.Error("unknown target")
-		http.Error(w, "unknown target", http.StatusBadRequest)
-		return
+		log.Debug("unconfigured target, use param as address")
+		device = &config.Device{
+			Address:  target,
+			Username: &conf.Global.Username,
+			Password: &conf.Global.Password,
+			Options:  &conf.Global.Options,
+		}
 	}
 
 	deviceOptions := *device.Options
@@ -139,7 +143,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		deviceOptions.ExportMACTable = paramExportMACTable == "1"
 	}
 
-	timeout := getTimeout(config, r)
+	timeout := getTimeout(conf, r)
 
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(timeout*float64(time.Second)))
 	defer cancel()
