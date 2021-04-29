@@ -3,8 +3,12 @@
 The goal is to export all available metrics from the OLT and attached ONUs.
 
 ## Probing
-Devices can be probed (when using the defaults) by requesting http://localhost:9777/probe?target=NAME.  
-Configured [options](#options) can be overwritten by using query parameters (e.g. [http://localhost:9777/probe?target=NAME&**export_olt=1&export_onus=0**](http://localhost:9777/probe?target=NAME&export_olt=1&export_onus=0)).
+Devices can be probed (when using the defaults) by requesting:  
+http://localhost:9777/probe?target=...  
+Configured [options](#options) can be overwritten by using query parameters e.g.  
+http://localhost:9777/probe?target=...&export_olt=1&export_onus=0
+
+`target` can be either an address or hostname that is scraped using the globally configured credentials, or a key from the `devices:` section of the configuration.
 
 ## Docker image
 
