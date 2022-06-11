@@ -4,3 +4,4 @@
 
 # ignore binary in root folder
 /ufiber-exporter
+/config.yml
