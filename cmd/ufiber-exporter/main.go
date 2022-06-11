@@ -19,11 +19,11 @@ import (
 	"github.com/swoga/ufiber-exporter/collector"
 	"github.com/swoga/ufiber-exporter/config"
 	"github.com/swoga/ufiber-exporter/model"
-	"github.com/swoga/ufiber-exporter/version"
 	"go.uber.org/zap"
 )
 
 var (
+	version   = "dev"
 	sc        config.SafeConfig
 	authCache = cache.New()
 	log       *zap.Logger
@@ -51,7 +51,7 @@ func main() {
 
 	log, _ = zapConfig.Build()
 	defer log.Sync()
-	log.Info("starting ufiber-exporter", zap.String("version", version.Version), zap.String("revision", version.Revision))
+	log.Info("starting ufiber-exporter", zap.String("version", version))
 
 	// inital config load
 	sc = config.New(*configFile)

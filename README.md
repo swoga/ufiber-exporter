@@ -60,6 +60,3 @@ username: <string> | default = global.username
 password: <string> | default = global.password
 options: <options> | default = global.options
 ```
-
-## Building
-You can either build with `go build ./cmd/ufiber-exporter/` or to build with `promu` use `make build`
