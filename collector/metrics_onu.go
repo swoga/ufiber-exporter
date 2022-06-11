@@ -26,7 +26,7 @@ func AddMetricsOnu(registry prometheus.Registerer, onus []model.ONU, onussetting
 	registry.MustRegister(distanceGaugeVec)
 	oltPortGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "pon",
-	}, []string{"serial"})
+	}, []string{"serial", "pon"})
 	registry.MustRegister(oltPortGaugeVec)
 	infoGaugeVec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "info",
@@ -125,7 +125,7 @@ func AddMetricsOnu(registry prometheus.Registerer, onus []model.ONU, onussetting
 			distanceGaugeVec.WithLabelValues(onu.Serial).Set(*onu.Distance)
 		}
 		if onu.OLTPort != nil {
-			oltPortGaugeVec.WithLabelValues(onu.Serial).Set(*onu.OLTPort)
+			oltPortGaugeVec.WithLabelValues(onu.Serial, fmt.Sprintf("%.0f", *onu.OLTPort)).Set(1)
 		}
 		if onu.RxPower != nil {
 			rxPowerGaugeVec.WithLabelValues(onu.Serial).Set(*onu.RxPower)
