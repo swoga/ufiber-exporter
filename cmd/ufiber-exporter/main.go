@@ -35,7 +35,7 @@ func main() {
 	log.Info().Str("version", version).Msg("starting ufiber-exporter")
 
 	// parse command line args
-	configFile := flag.String("config.file", "", "")
+	configFile := flag.String("config.file", "config.yml", "")
 	debug := flag.Bool("debug", false, "")
 	flag.Parse()
 
