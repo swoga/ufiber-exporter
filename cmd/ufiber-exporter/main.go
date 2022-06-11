@@ -14,50 +14,42 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/swoga/ufiber-exporter/api"
 	"github.com/swoga/ufiber-exporter/cache"
 	"github.com/swoga/ufiber-exporter/collector"
 	"github.com/swoga/ufiber-exporter/config"
 	"github.com/swoga/ufiber-exporter/model"
-	"go.uber.org/zap"
 )
 
 var (
-	version   = "dev"
-	sc        config.SafeConfig
-	authCache = cache.New()
-	log       *zap.Logger
+	version       = "dev"
+	sc            config.SafeConfig
+	authCache     = cache.New()
+	consoleWriter = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 )
 
 func main() {
+	log.Logger = log.Output(consoleWriter)
+	log.Info().Str("version", version).Msg("starting ufiber-exporter")
+
 	// parse command line args
 	configFile := flag.String("config.file", "", "")
 	debug := flag.Bool("debug", false, "")
 	flag.Parse()
 
-	level := zap.InfoLevel
 	if *debug {
-		level = zap.DebugLevel
+		log.Logger = log.Logger.Level(zerolog.DebugLevel)
+	} else {
+		log.Logger = log.Logger.Level(zerolog.InfoLevel)
 	}
-
-	zapConfig := zap.Config{
-		Level:            zap.NewAtomicLevelAt(level),
-		Development:      false,
-		Encoding:         "console",
-		EncoderConfig:    zap.NewDevelopmentEncoderConfig(),
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
-	}
-
-	log, _ = zapConfig.Build()
-	defer log.Sync()
-	log.Info("starting ufiber-exporter", zap.String("version", version))
 
 	// inital config load
 	sc = config.New(*configFile)
 	err := sc.LoadConfig()
 	if err != nil {
-		log.Fatal("error loading config", zap.Any("err", err))
+		log.Panic().Err(err).Msg("error loading config")
 	}
 
 	// setup config reload
@@ -69,17 +61,17 @@ func main() {
 			var err error
 			select {
 			case <-hup:
-				log.Debug("config reload triggerd by SIGHUP")
+				log.Debug().Msg("config reload triggerd by SIGHUP")
 				err = sc.LoadConfig()
 			case reloadResult := <-reloadRequest:
-				log.Debug("config reload triggerd by API")
+				log.Debug().Msg("config reload triggerd by API")
 				err = sc.LoadConfig()
 				reloadResult <- err
 			}
 			if err != nil {
-				log.Error("error reloading config", zap.Any("err", err))
+				log.Err(err).Msg("error reloading config")
 			} else {
-				log.Info("reloaded config file")
+				log.Info().Msg("reloaded config file")
 			}
 		}
 	}()
@@ -98,11 +90,11 @@ func main() {
 	http.Handle(config.MetricsPath, promhttp.Handler())
 	http.HandleFunc(config.ProbePath, handleRequest)
 
-	log.Info("starting http server", zap.String("metrics_path", config.MetricsPath), zap.String("probe_path", config.ProbePath), zap.String("listen", config.Listen))
+	log.Info().Str("metrics_path", config.MetricsPath).Str("listen", config.Listen).Str("probe_path", config.ProbePath).Msg("starting http server")
 
 	err = http.ListenAndServe(config.Listen, nil)
 	if err != nil {
-		log.Fatal("error starting http server", zap.Any("err", err))
+		log.Panic().Err(err).Msg("error starting http server")
 	}
 }
 
@@ -110,16 +102,16 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	conf := sc.Get()
 	target := r.URL.Query().Get("target")
 	if target == "" {
-		log.Error("request with missing target")
+		log.Error().Msg("request with missing target")
 		http.Error(w, "?target= missing", http.StatusBadRequest)
 		return
 	}
 
-	log := log.With(zap.String("target", target))
+	log := log.With().Str("target", target).Logger()
 
 	device, ok := conf.Devices[target]
 	if !ok {
-		log.Debug("unconfigured target, use param as address")
+		log.Debug().Msg("unconfigured target, use param as address")
 		device = &config.Device{
 			Address:  target,
 			Username: &conf.Global.Username,
@@ -159,13 +151,13 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, context.Canceled) {
 			return
 		}
-		log.Error("error getting data from API", zap.Any("err", err))
+		log.Err(err).Msg("error getting data from API")
 		success = 0
 	} else {
 		exporterRegistry := prometheus.WrapRegistererWithPrefix("ufiber_exporter_", registry)
 		err = addMetrics(data, deviceOptions, exporterRegistry)
 		if err != nil {
-			log.Error("error adding metrics", zap.Any("err", err))
+			log.Err(err).Msg("error adding metrics")
 			success = 0
 		}
 
@@ -231,14 +223,14 @@ func addMetrics(data apiData, deviceOptions config.Options, registry prometheus.
 	return nil
 }
 
-func getFromAPIWithRetry(ctx context.Context, log *zap.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
+func getFromAPIWithRetry(ctx context.Context, log zerolog.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
 	data, err := getFromAPI(ctx, log, target, device, deviceOptions)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return data, err
 		}
 		// if there was an error somewhere, retry once
-		log.Error("error on first try", zap.Any("err", err))
+		log.Err(err).Msg("error on first try")
 
 		// remove auth token, so login will be repeated
 		authCache.Remove(target)
@@ -251,7 +243,7 @@ func getFromAPIWithRetry(ctx context.Context, log *zap.Logger, target string, de
 	return data, nil
 }
 
-func getFromAPI(ctx context.Context, log *zap.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
+func getFromAPI(ctx context.Context, log zerolog.Logger, target string, device config.Device, deviceOptions config.Options) (apiData, error) {
 	data := apiData{}
 	auth := authCache.Get(target)
 	// if there is no X-Auth-Token in the cache try to login

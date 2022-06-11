@@ -12,9 +12,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/swoga/ufiber-exporter/config"
 	"github.com/swoga/ufiber-exporter/model"
-	"go.uber.org/zap"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 	}
 )
 
-func request(ctx context.Context, log *zap.Logger, device config.Device, auth string, method string, url string, data interface{}) (res *http.Response, err error) {
+func request(ctx context.Context, log zerolog.Logger, device config.Device, auth string, method string, url string, data interface{}) (res *http.Response, err error) {
 	var buf io.Reader
 	if data != nil {
 		body, err := json.Marshal(data)
@@ -39,7 +39,7 @@ func request(ctx context.Context, log *zap.Logger, device config.Device, auth st
 	}
 
 	url = fmt.Sprintf("https://%s/api/v1.0/%s", device.Address, url)
-	log.Debug("send request", zap.String("method", method), zap.String("url", url))
+	log.Debug().Str("method", method).Str("url", url).Msg("send request")
 
 	req, err := http.NewRequestWithContext(ctx, method, url, buf)
 	if err != nil {
@@ -61,13 +61,13 @@ func request(ctx context.Context, log *zap.Logger, device config.Device, auth st
 
 	if err != nil {
 		data, _ := ioutil.ReadAll(res.Body)
-		log.Error("error from API", zap.String("response", string(data)))
+		log.Error().Str("response", string(data)).Msg("error from API")
 	}
 
 	return
 }
 
-func DoLogin(ctx context.Context, log *zap.Logger, device config.Device) (res *http.Response, err error) {
+func DoLogin(ctx context.Context, log zerolog.Logger, device config.Device) (res *http.Response, err error) {
 	login := &model.LoginRequest{
 		Username: *device.Username,
 		Password: *device.Password,
@@ -86,7 +86,7 @@ func DoLogin(ctx context.Context, log *zap.Logger, device config.Device) (res *h
 		return
 	}
 
-	log.Debug("response", zap.Any("data", data))
+	log.Debug().Interface("data", data).Msg("response")
 
 	defer res.Body.Close()
 
@@ -97,7 +97,7 @@ func DoLogin(ctx context.Context, log *zap.Logger, device config.Device) (res *h
 	return
 }
 
-func GetStatistics(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*model.Statistics, error) {
+func GetStatistics(ctx context.Context, log zerolog.Logger, device config.Device, auth string) (*model.Statistics, error) {
 	res, err := request(ctx, log, device, auth, "GET", "statistics", nil)
 	if err != nil {
 		return nil, err
@@ -111,14 +111,14 @@ func GetStatistics(ctx context.Context, log *zap.Logger, device config.Device, a
 		return nil, err
 	}
 
-	log.Debug("response", zap.Any("data", data))
+	log.Debug().Interface("data", data).Msg("response")
 
 	defer res.Body.Close()
 
 	return &data[0], nil
 }
 
-func GetInterfaces(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.InterfacesInterface, error) {
+func GetInterfaces(ctx context.Context, log zerolog.Logger, device config.Device, auth string) (*[]model.InterfacesInterface, error) {
 	res, err := request(ctx, log, device, auth, "GET", "interfaces", nil)
 	if err != nil {
 		return nil, err
@@ -132,14 +132,14 @@ func GetInterfaces(ctx context.Context, log *zap.Logger, device config.Device, a
 		return nil, err
 	}
 
-	log.Debug("response", zap.Any("data", data))
+	log.Debug().Interface("data", data).Msg("response")
 
 	defer res.Body.Close()
 
 	return &data, nil
 }
 
-func GetONUs(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.ONU, error) {
+func GetONUs(ctx context.Context, log zerolog.Logger, device config.Device, auth string) (*[]model.ONU, error) {
 	res, err := request(ctx, log, device, auth, "GET", "gpon/onus", nil)
 	if err != nil {
 		return nil, err
@@ -153,14 +153,14 @@ func GetONUs(ctx context.Context, log *zap.Logger, device config.Device, auth st
 		return nil, err
 	}
 
-	log.Debug("response", zap.Any("data", data))
+	log.Debug().Interface("data", data).Msg("response")
 
 	defer res.Body.Close()
 
 	return &data, nil
 }
 
-func GetONUsSettings(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.ONUSettings, error) {
+func GetONUsSettings(ctx context.Context, log zerolog.Logger, device config.Device, auth string) (*[]model.ONUSettings, error) {
 	res, err := request(ctx, log, device, auth, "GET", "gpon/onus/settings", nil)
 	if err != nil {
 		return nil, err
@@ -174,14 +174,14 @@ func GetONUsSettings(ctx context.Context, log *zap.Logger, device config.Device,
 		return nil, err
 	}
 
-	log.Debug("response", zap.Any("data", data))
+	log.Debug().Interface("data", data).Msg("response")
 
 	defer res.Body.Close()
 
 	return &data, nil
 }
 
-func GetMACTable(ctx context.Context, log *zap.Logger, device config.Device, auth string) (*[]model.MACTable, error) {
+func GetMACTable(ctx context.Context, log zerolog.Logger, device config.Device, auth string) (*[]model.MACTable, error) {
 	res, err := request(ctx, log, device, auth, "GET", "tools/mac-table", nil)
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func GetMACTable(ctx context.Context, log *zap.Logger, device config.Device, aut
 		return nil, err
 	}
 
-	log.Debug("response", zap.Any("data", data))
+	log.Debug().Interface("data", data).Msg("response")
 
 	defer res.Body.Close()
 
