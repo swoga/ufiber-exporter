@@ -134,8 +134,8 @@ func AddMetricsOnu(registry prometheus.Registerer, onus []model.ONU, onussetting
 			txPowerGaugeVec.WithLabelValues(onu.Serial).Set(*onu.TxPower)
 		}
 		if onu.Statistics != nil {
-			rxBytesCounterVec.WithLabelValues(onu.Serial).Add(*&onu.Statistics.RxBytes)
-			txBytesCounterVec.WithLabelValues(onu.Serial).Add(*&onu.Statistics.TxBytes)
+			rxBytesCounterVec.WithLabelValues(onu.Serial).Add(onu.Statistics.RxBytes)
+			txBytesCounterVec.WithLabelValues(onu.Serial).Add(onu.Statistics.TxBytes)
 		}
 		if onu.Ports != nil {
 			for i, port := range *onu.Ports {
