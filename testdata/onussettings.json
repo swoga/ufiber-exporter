@@ -1,0 +1,278 @@
+[
+    {
+        "adminPassword": "ubnt",
+        "bandwidthLimit": {
+            "download": {
+                "enabled": false,
+                "limit": 1
+            },
+            "upload": {
+                "enabled": false,
+                "limit": 1
+            }
+        },
+        "bridgeMode": {
+            "ports": [
+                {
+                    "includeVLANs": [
+                        100,
+                        101,
+                        102
+                    ],
+                    "nativeVLAN": 200,
+                    "port": "1"
+                },
+                {
+                    "includeVLANs": [
+                        100,
+                        101,
+                        102
+                    ],
+                    "nativeVLAN": 200,
+                    "port": "2"
+                },
+                {
+                    "includeVLANs": [
+                        100,
+                        101,
+                        102
+                    ],
+                    "nativeVLAN": 200,
+                    "port": "3"
+                },
+                {
+                    "includeVLANs": [
+                        100,
+                        101,
+                        102
+                    ],
+                    "nativeVLAN": 200,
+                    "port": "4"
+                },
+                {
+                    "includeVLANs": [],
+                    "nativeVLAN": 200,
+                    "port": "wifi"
+                }
+            ]
+        },
+        "enabled": true,
+        "lanAddress": "192.168.1.1\/24",
+        "lanProvisioned": true,
+        "lastOnuId": 12,
+        "mode": "bridge",
+        "model": "NanoG",
+        "name": "onu1",
+        "notes": "",
+        "ports": [
+            {
+                "id": "1",
+                "speed": "auto"
+            },
+            {
+                "id": "2",
+                "speed": "auto"
+            },
+            {
+                "id": "3",
+                "speed": "auto"
+            },
+            {
+                "id": "4",
+                "speed": "auto"
+            }
+        ],
+        "routerMode": {
+            "dhcpLeaseTime": 600,
+            "dhcpPool": {
+                "rangeStart": "192.168.1.10",
+                "rangeStop": "192.168.1.250"
+            },
+            "dhcpRelay": "",
+            "dhcpServerMode": "enabled",
+            "dnsProxyEnabled": true,
+            "firewallEnabled6": true,
+            "gateway": "",
+            "gateway6": "",
+            "ipv6Enabled": false,
+            "lanAddress6": "",
+            "lanMode6": "auto",
+            "nat": {
+                "ftp": true,
+                "pptp": true,
+                "rtsp": true,
+                "sip": false
+            },
+            "pppoeMode": "auto",
+            "pppoePassword": "",
+            "pppoeUser": "",
+            "routerAdvertisement": {
+                "mode": "auto",
+                "prefix": ""
+            },
+            "upnpEnabled": false,
+            "wanAccessBlocked": true,
+            "wanAddress": "",
+            "wanAddress6": "",
+            "wanMode": "dhcp",
+            "wanMode6": "slaac",
+            "wanVLAN": 200
+        },
+        "serial": "UBNTxxxxxxx1",
+        "services": {
+            "httpPort": 80,
+            "sshEnabled": false,
+            "sshPort": 22,
+            "telnetEnabled": false,
+            "telnetPort": 23,
+            "ubntDiscoveryEnabled": true
+        },
+        "wifi": {
+            "channel": "auto",
+            "channelWidth": "40",
+            "country": "WO",
+            "countryListId": "1",
+            "enabled": true,
+            "networks": [
+                {
+                    "authMode": "wpa2psk",
+                    "hideSSID": false,
+                    "key": "",
+                    "ssid": "UBNT-ONU"
+                }
+            ],
+            "provisioned": false,
+            "txPower": 100
+        }
+    },
+    {
+        "adminPassword": "ubnt",
+        "bandwidthLimit": {
+            "download": {
+                "enabled": false,
+                "limit": 1
+            },
+            "upload": {
+                "enabled": false,
+                "limit": 1
+            }
+        },
+        "bridgeMode": {
+            "ports": [
+                {
+                    "includeVLANs": [],
+                    "nativeVLAN": 300,
+                    "port": "1"
+                },
+                {
+                    "includeVLANs": [],
+                    "nativeVLAN": 300,
+                    "port": "2"
+                },
+                {
+                    "includeVLANs": [],
+                    "nativeVLAN": 300,
+                    "port": "3"
+                },
+                {
+                    "includeVLANs": [],
+                    "nativeVLAN": 300,
+                    "port": "4"
+                },
+                {
+                    "includeVLANs": [],
+                    "nativeVLAN": 300,
+                    "port": "wifi"
+                }
+            ]
+        },
+        "enabled": true,
+        "lanAddress": "192.168.1.1\/24",
+        "lanProvisioned": false,
+        "lastOnuId": 6,
+        "mode": "bridge",
+        "model": "NanoG",
+        "name": "onu2",
+        "notes": "",
+        "ports": [
+            {
+                "id": "1",
+                "speed": "auto"
+            },
+            {
+                "id": "2",
+                "speed": "auto"
+            },
+            {
+                "id": "3",
+                "speed": "auto"
+            },
+            {
+                "id": "4",
+                "speed": "auto"
+            }
+        ],
+        "routerMode": {
+            "dhcpLeaseTime": 600,
+            "dhcpPool": {
+                "rangeStart": "192.168.1.10",
+                "rangeStop": "192.168.1.250"
+            },
+            "dhcpRelay": "",
+            "dhcpServerMode": "enabled",
+            "dnsProxyEnabled": true,
+            "firewallEnabled6": true,
+            "gateway": "",
+            "gateway6": "",
+            "ipv6Enabled": false,
+            "lanAddress6": "",
+            "lanMode6": "auto",
+            "nat": {
+                "ftp": true,
+                "pptp": true,
+                "rtsp": true,
+                "sip": false
+            },
+            "pppoeMode": "auto",
+            "pppoePassword": "",
+            "pppoeUser": "",
+            "routerAdvertisement": {
+                "mode": "auto",
+                "prefix": ""
+            },
+            "upnpEnabled": false,
+            "wanAccessBlocked": true,
+            "wanAddress": "",
+            "wanAddress6": "",
+            "wanMode": "dhcp",
+            "wanMode6": "slaac",
+            "wanVLAN": 300
+        },
+        "serial": "UBNTxxxxxxx2",
+        "services": {
+            "httpPort": 80,
+            "sshEnabled": false,
+            "sshPort": 22,
+            "telnetEnabled": false,
+            "telnetPort": 23,
+            "ubntDiscoveryEnabled": false
+        },
+        "wifi": {
+            "channel": "auto",
+            "channelWidth": "40",
+            "country": "WO",
+            "countryListId": "1",
+            "enabled": true,
+            "networks": [
+                {
+                    "authMode": "wpa2psk",
+                    "hideSSID": false,
+                    "key": "",
+                    "ssid": "UBNT-ONU"
+                }
+            ],
+            "provisioned": false,
+            "txPower": 100
+        }
+    }
+]

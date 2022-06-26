@@ -1,0 +1,102 @@
+[
+    {
+        "authorized": true,
+        "connected": true,
+        "connectionTime": 124265,
+        "distance": 8778,
+        "error": "",
+        "firmwareHash": "1825-085",
+        "firmwareVersion": "v4.2.1",
+        "laserBias": 13.5979995727539,
+        "mac": "78:8a:20:00:00:01",
+        "oltPort": 4,
+        "ports": [
+            {
+                "id": "1",
+                "plugged": true,
+                "speed": "1000-full"
+            }
+        ],
+        "portsStat": [
+            {
+                "rxBytes": 60424625,
+                "rxRate": 0,
+                "txBytes": 305351021,
+                "txRate": 104
+            }
+        ],
+        "router": {},
+        "rxPower": -17.878,
+        "serial": "UBNTxxxxxxx1",
+        "statistics": {
+            "rxBytes": 680664670,
+            "rxRate": 27302,
+            "txBytes": 3499061895,
+            "txRate": 34505
+        },
+        "system": {
+            "cpu": 1,
+            "mem": 53,
+            "temperature": {
+                "cpu": 54.0
+            },
+            "uptime": 124305,
+            "voltage": 3.3199999332428
+        },
+        "txPower": 1.926,
+        "upgradeStatus": {
+            "failureReason": "",
+            "status": "finished"
+        }
+    },
+    {
+        "authorized": true,
+        "connected": true,
+        "connectionTime": 124265,
+        "distance": 8847,
+        "error": "",
+        "firmwareHash": "1825-085",
+        "firmwareVersion": "v4.2.1",
+        "laserBias": 13.7580003738403,
+        "mac": "78:8a:20:00:00:02",
+        "oltPort": 4,
+        "ports": [
+            {
+                "id": "1",
+                "plugged": true,
+                "speed": "1000-full"
+            }
+        ],
+        "portsStat": [
+            {
+                "rxBytes": 134873955,
+                "rxRate": 2305,
+                "txBytes": 637653304,
+                "txRate": 1002
+            }
+        ],
+        "router": {},
+        "rxPower": -16.108,
+        "serial": "UBNTxxxxxxx2",
+        "statistics": {
+            "rxBytes": 1494461245,
+            "rxRate": 17987,
+            "txBytes": 6792502776,
+            "txRate": 5697
+        },
+        "system": {
+            "cpu": 0,
+            "mem": 51,
+            "temperature": {
+                "cpu": 59.0
+            },
+            "uptime": 124305,
+            "voltage": 3.33999991416931
+        },
+        "txPower": 2.432,
+        "upgradeStatus": {
+            "failureReason": "",
+            "status": "finished"
+        }
+    }
+]
