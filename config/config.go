@@ -1,12 +1,20 @@
 package config
 
+import (
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+)
+
 type Config struct {
-	Listen      string             `yaml:"listen"`
-	ProbePath   string             `yaml:"probe_path"`
-	MetricsPath string             `yaml:"metrics_path"`
-	Timeout     float64            `yaml:"timeout"`
-	Devices     map[string]*Device `yaml:"devices"`
-	Global      Global             `yaml:"global"`
+	Listen      string    `yaml:"listen"`
+	ProbePath   string    `yaml:"probe_path"`
+	MetricsPath string    `yaml:"metrics_path"`
+	Timeout     float64   `yaml:"timeout"`
+	Devices     []*Device `yaml:"devices"`
+	Global      Global    `yaml:"global"`
+
+	deviceMap map[string]*Device
 }
 
 func DefaultConfig() Config {
@@ -18,6 +26,7 @@ func DefaultConfig() Config {
 		Global: Global{
 			Options: DefaultOptions(),
 		},
+		deviceMap: make(map[string]*Device),
 	}
 }
 
@@ -27,6 +36,11 @@ func DefaultOptions() Options {
 		ExportONUs:     true,
 		ExportMACTable: false,
 	}
+}
+
+func (c *Config) GetDevice(name string) (*Device, bool) {
+	d, found := c.deviceMap[name]
+	return d, found
 }
 
 func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -49,6 +63,23 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 
+	if err := c.populateDeviceMap(); err != nil {
+		return nil
+	}
+
+	return nil
+}
+
+func (c *Config) populateDeviceMap() error {
+	log.Logger.Trace().Msg("populate target map")
+	for _, device := range c.Devices {
+		_, exists := c.deviceMap[device.Name]
+		if exists {
+			return fmt.Errorf("non-unique target name: %s", device.Name)
+		}
+		log.Logger.Trace().Str("name", device.Name).Msg("add device")
+		c.deviceMap[device.Name] = device
+	}
 	return nil
 }
 
@@ -76,6 +107,7 @@ func (o *Options) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Device struct {
+	Name     string   `yaml:"name"`
 	Address  string   `yaml:"address"`
 	Username *string  `yaml:"username"`
 	Password *string  `yaml:"password"`

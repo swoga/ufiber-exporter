@@ -109,7 +109,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	log := log.With().Str("target", target).Logger()
 
-	device, ok := conf.Devices[target]
+	device, ok := conf.GetDevice(target)
 	if !ok {
 		log.Debug().Msg("unconfigured target, use param as address")
 		device = &config.Device{

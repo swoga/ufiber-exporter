@@ -35,8 +35,7 @@ timeout: <int> | default = 60
 global: <global>
 
 devices:
-  # map key is the name of the target (?target=<string>)
-  <string>: <device>
+  - <device>
 ```
 
 ### `<global>`
@@ -55,6 +54,7 @@ export_mac_table: <bool> | default = false
 
 ### `<device>`
 ```yaml
+name: <string>
 address: <string>
 username: <string> | default = global.username
 password: <string> | default = global.password
