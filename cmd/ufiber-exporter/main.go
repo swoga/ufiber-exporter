@@ -14,6 +14,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/expfmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/swoga/ufiber-exporter/api"
@@ -99,19 +100,39 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	debugStr := r.URL.Query().Get("debug")
+	debug := false
+	if debugStr != "" {
+		debug = true
+	}
+	traceStr := r.URL.Query().Get("trace")
+	trace := false
+	if traceStr != "" {
+		trace = true
+	}
+
+	requestLog := log.With().Logger()
+
+	if debug || trace {
+		debugWriter := zerolog.ConsoleWriter{Out: w, TimeFormat: time.RFC3339, NoColor: true}
+		multi := zerolog.MultiLevelWriter(consoleWriter, debugWriter)
+		requestLog = requestLog.Output(multi)
+		w.Header().Set("Content-Type", "text/plain")
+	}
+
 	conf := sc.Get()
 	target := r.URL.Query().Get("target")
 	if target == "" {
-		log.Error().Msg("request with missing target")
+		requestLog.Error().Msg("request with missing target")
 		http.Error(w, "?target= missing", http.StatusBadRequest)
 		return
 	}
 
-	log := log.With().Str("target", target).Logger()
+	requestLog = requestLog.With().Str("target", target).Logger()
 
 	device, ok := conf.GetDevice(target)
 	if !ok {
-		log.Debug().Msg("unconfigured target, use param as address")
+		requestLog.Debug().Msg("unconfigured target, use param as address")
 		device = &config.Device{
 			Address:  target,
 			Username: &conf.Global.Username,
@@ -146,18 +167,18 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	var success float64 = 1
 
-	data, err := getFromAPIWithRetry(ctx, log, target, *device, deviceOptions)
+	data, err := getFromAPIWithRetry(ctx, requestLog, target, *device, deviceOptions)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return
 		}
-		log.Err(err).Msg("error getting data from API")
+		requestLog.Err(err).Msg("error getting data from API")
 		success = 0
 	} else {
 		exporterRegistry := prometheus.WrapRegistererWithPrefix("ufiber_exporter_", registry)
 		err = addMetrics(data, deviceOptions, exporterRegistry)
 		if err != nil {
-			log.Err(err).Msg("error adding metrics")
+			requestLog.Err(err).Msg("error adding metrics")
 			success = 0
 		}
 
@@ -176,6 +197,14 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	})
 	registry.MustRegister(probeSuccessGauge)
 	probeSuccessGauge.Set(success)
+
+	if debug || trace {
+		mfs, _ := registry.Gather()
+		for _, mf := range mfs {
+			expfmt.MetricFamilyToText(w, mf)
+		}
+		return
+	}
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 	h.ServeHTTP(w, r)
