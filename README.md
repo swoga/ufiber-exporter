@@ -3,28 +3,37 @@
 The goal is to export all available metrics from the OLT and attached ONUs.
 
 ## Probing
-Devices can be probed (when using the defaults) by requesting:  
-http://localhost:9777/probe?target=...  
+Devices can be probed by requesting:  
+<pre>http://localhost:9777/probe?<b>target=xxx</b></pre>
 Configured [options](#options) can be overwritten by using query parameters e.g.  
-http://localhost:9777/probe?target=...&export_olt=1&export_onus=0
+<pre>http://localhost:9777/probe?target=xxx&<b>export_olt=1&export_onus=0</b></pre>
 
-`target` can be either an address or hostname that is scraped using the globally configured credentials, or a key from the `devices:` section of the configuration.
+`target` can be either an address or hostname that is scraped using the globally configured credentials, or the name of a device in the configuration.
+
+For troubleshooting there are also two log levels available:
+<pre>http://localhost:9777/probe?target=xxx&<b>debug=1</b></pre>
+<pre>http://localhost:9777/probe?target=xxx&<b>trace=1</b></pre>
 
 ## Docker image
 
 Docker image is available on Docker Hub, Quay.io and GitHub
 
-`docker pull swoga/ufiber-exporter`  
-`docker pull quay.io/swoga/ufiber-exporter`  
-`docker pull ghcr.io/swoga/ufiber-exporter`
+<pre>
+docker pull swoga/ufiber-exporter
+docker pull quay.io/swoga/ufiber-exporter
+docker pull ghcr.io/swoga/ufiber-exporter
+</pre>
 
 You just need to map your config file into the container at `/etc/ufiber-exporter/config.yml`  
-`docker run -v config.yml:/etc/ufiber-exporter/config.yml swoga/ufiber-exporter`
+<pre>
+docker run -v config.yml:/etc/ufiber-exporter/config.yml swoga/ufiber-exporter
+</pre>
 
 ## Command line flags
-`ufiber-exporter` requires a path to a YAML config file supplied in the command line flag `--config.file=config.yml`.
-
-`--debug` can be used to raise the log level.
+<pre>
+--config.file=config.yml
+--debug
+</pre>
 
 ## Configuration file
 ```yaml
