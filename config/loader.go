@@ -5,8 +5,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/goccy/go-yaml"
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -63,8 +63,7 @@ func (sc *SafeConfig) LoadConfig() (err error) {
 		return fmt.Errorf("error reading config file: %s", err)
 	}
 	defer yamlReader.Close()
-	decoder := yaml.NewDecoder(yamlReader)
-	decoder.KnownFields(true)
+	decoder := yaml.NewDecoder(yamlReader, yaml.Strict())
 
 	err = decoder.Decode(c)
 	if err != nil {
