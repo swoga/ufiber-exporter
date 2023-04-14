@@ -6,7 +6,7 @@ require (
 	github.com/goccy/go-yaml v1.11.0
 	github.com/prometheus/client_golang v1.15.0
 	github.com/prometheus/common v0.42.0
-	github.com/rs/zerolog v1.29.0
+	github.com/rs/zerolog v1.29.1
 )
 
 require (
