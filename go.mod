@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/goccy/go-yaml v1.11.3
 	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/common v0.46.0
+	github.com/prometheus/common v0.47.0
 	github.com/rs/zerolog v1.32.0
 )
 
