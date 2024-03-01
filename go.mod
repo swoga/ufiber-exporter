@@ -1,8 +1,6 @@
 module github.com/swoga/ufiber-exporter
 
-go 1.21
-
-toolchain go1.22.0
+go 1.22
 
 require (
 	github.com/goccy/go-yaml v1.11.3
