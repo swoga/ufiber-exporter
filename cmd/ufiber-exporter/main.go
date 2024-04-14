@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -132,6 +133,13 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	device, ok := conf.GetDevice(target)
 	if !ok {
+		_, err := net.LookupHost(target)
+		if err != nil {
+			requestLog.Err(err).Msg("invalid target")
+			http.Error(w, "invalid target", http.StatusBadRequest)
+			return
+		}
+
 		requestLog.Debug().Msg("unconfigured target, use param as address")
 		device = &config.Device{
 			Address:  target,
