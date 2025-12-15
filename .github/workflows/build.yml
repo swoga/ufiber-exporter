@@ -96,7 +96,7 @@ jobs:
     needs: build-go
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: ufiber-exporter.linux-amd64
       - name: Decompress
