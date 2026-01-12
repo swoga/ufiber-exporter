@@ -3,7 +3,7 @@ module github.com/swoga/ufiber-exporter
 go 1.24.5
 
 require (
-	github.com/goccy/go-yaml v1.19.1
+	github.com/goccy/go-yaml v1.19.2
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.4
 	github.com/rs/zerolog v1.34.0
