@@ -43,7 +43,7 @@ func (c *Config) GetDevice(name string) (*Device, bool) {
 	return d, found
 }
 
-func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 	*c = DefaultConfig()
 
 	type plain Config
@@ -95,7 +95,7 @@ type Options struct {
 	ExportMACTable bool `yaml:"export_mac_table"`
 }
 
-func (o *Options) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *Options) UnmarshalYAML(unmarshal func(any) error) error {
 	*o = DefaultOptions()
 
 	type plain Options

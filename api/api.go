@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+
 	"net/http"
 	"time"
 
@@ -28,7 +28,7 @@ var (
 	}
 )
 
-func request(ctx context.Context, log zerolog.Logger, device config.Device, auth string, method string, url string, data interface{}) (res *http.Response, err error) {
+func request(ctx context.Context, log zerolog.Logger, device config.Device, auth string, method string, url string, data any) (res *http.Response, err error) {
 	var buf io.Reader
 	if data != nil {
 		body, err := json.Marshal(data)
@@ -60,7 +60,7 @@ func request(ctx context.Context, log zerolog.Logger, device config.Device, auth
 	}
 
 	if err != nil {
-		data, _ := ioutil.ReadAll(res.Body)
+		data, _ := io.ReadAll(res.Body)
 		log.Error().Str("response", string(data)).Msg("error from API")
 	}
 
