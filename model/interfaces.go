@@ -24,7 +24,7 @@ type SfpModule struct {
 	Part    string
 	Present bool
 	Serial  *string
-	TxFault *string
+	TxFault *StringOrBool
 	Vendor  *string
 }
 
