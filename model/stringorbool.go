@@ -2,21 +2,21 @@ package model
 
 import "encoding/json"
 
-// StringOrBool absorbe un champ JSON que l'API UFiber expose tantot comme
-// chaine, tantot comme booleen selon la plateforme.
+// StringOrBool handles a JSON field that the UFiber API exposes either as a
+// string or as a boolean, depending on the platform.
 //
-// Les OLT GPON renvoient une chaine pour SfpModule.TxFault, les OLT XGS
-// renvoient un booleen. Go etant strictement type, une seule incoherence
-// fait echouer le parsing de TOUTE la reponse : sans ce type, aucune
-// metrique n'est collectee sur les XGS.
+// GPON OLTs return a string for SfpModule.TxFault, while XGS OLTs return a
+// boolean. Since Go is strictly typed, this single mismatch makes the whole
+// response fail to unmarshal: without this type, no metrics at all are
+// collected from XGS devices.
 //
-// La valeur booleenne est normalisee en "true"/"false" pour rester
-// compatible avec le code consommant deja ce champ comme une chaine.
+// Boolean values are normalised to "true"/"false" so that any code already
+// consuming this field as a string keeps working.
 type StringOrBool string
 
 func (s *StringOrBool) UnmarshalJSON(data []byte) error {
-	// Une valeur JSON non entouree de guillemets n'est pas une chaine :
-	// on tente le booleen avant de se rabattre sur le cas nominal.
+	// A JSON value not wrapped in quotes is not a string: try the boolean
+	// form before falling back to the nominal case.
 	if len(data) > 0 && data[0] != '"' {
 		var b bool
 		if err := json.Unmarshal(data, &b); err == nil {
