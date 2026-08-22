@@ -6,8 +6,5 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Detail     string `json:"detail"`
-	Error      int    `json:"error"`
-	Message    string `json:"message"`
-	StatusCode int    `json:"statusCode"`
+	Error int `json:"error"`
 }
