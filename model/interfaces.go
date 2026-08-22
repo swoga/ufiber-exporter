@@ -4,15 +4,11 @@ type InterfacesInterface struct {
 	Identification Identification
 	PON            *PON
 	Port           *Port
-	LAG            *LAG
 	Status         Status
 }
 
 type Identification struct {
-	ID   string
-	MAC  string
-	Name string
-	Type string
+	ID string
 }
 
 type PON struct {
@@ -20,29 +16,14 @@ type PON struct {
 }
 
 type SfpModule struct {
-	LoS     *bool
-	Part    string
 	Present bool
-	Serial  *string
-	TxFault *string
-	Vendor  *string
 }
 
 type Status struct {
-	ArpProxy     bool
-	CurrentSpeed string
-	Enabled      bool
-	MTU          float64
-	Plugged      bool
-	Speed        string
+	Enabled bool
+	Plugged bool
 }
 
 type Port struct {
 	SFP SfpModule
-}
-
-type LAG struct {
-	Interfaces  []Identification
-	LoadBalance string
-	Static      bool
 }

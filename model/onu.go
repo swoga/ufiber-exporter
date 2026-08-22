@@ -10,7 +10,6 @@ type ONU struct {
 	ConnectionTime  *float64
 	Distance        *float64
 	Error           string
-	FirmwareHash    string
 	FirmwareVersion string
 	LaserBias       *float64
 	MAC             string
@@ -35,9 +34,7 @@ type ONUPort struct {
 
 type ONUStatistics struct {
 	RxBytes float64
-	RxRate  float64
 	TxBytes float64
-	TxRate  float64
 }
 
 type ONUSystem struct {
@@ -49,6 +46,5 @@ type ONUSystem struct {
 }
 
 type ONUUpgradeStatus struct {
-	FailureReason string
-	Status        string
+	Status string
 }
